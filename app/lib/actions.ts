@@ -43,21 +43,20 @@ export async function uploadFile(formData: FormData) {
 
 export async function handleOcr(formData: FormData) {
   console.log('OCR');
-  const client = new vision.ImageAnnotatorClient();
+  // Creates a client
+  const client = new vision.ImageAnnotatorClient({
+    apiKey: process.env.GOOGLE_API_KEY,
+  });
 
-  const allHeaders = await headers();
-  const host = allHeaders.get('host');
-  console.log(host);
-  if (!host) {
-    console.log('No host');
-    return;
-  }
-  const fileUrl = `${host}/test.png`;
-  console.log(fileUrl);
-
-  // Performs label detection on the image file
-  const [result] = await client.labelDetection(fileUrl);
-  const labels = result.labelAnnotations;
-  console.log('Labels:');
-  labels?.forEach((label) => console.log(label.description));
+  /**
+   * TODO(developer): Uncomment the following line before running the sample.
+   */
+  // const fileName = 'Local image file, e.g. /path/to/image.png';
+  const fileName = path.join(process.cwd(), 'app/lib/', 'test.png');
+  console.log(fileName);
+  // Performs text detection on the local file
+  const [result] = await client.textDetection(fileName);
+  const detections = result.textAnnotations;
+  console.log('Text:');
+  detections?.forEach((text) => console.log(text));
 }
