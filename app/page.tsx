@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { uploadFile } from './lib/actions';
+import { handleOcr, uploadFile } from './lib/actions';
 
 export default function Home() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -20,6 +20,9 @@ export default function Home() {
             name="file"
             onChange={handleFileChange}
           />
+        </form>
+        <form action={handleOcr}>
+          <button type="submit">OCR</button>
         </form>
       </main>
     </div>
