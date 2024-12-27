@@ -70,7 +70,10 @@ export default function FileUploadPage() {
       {result && (
         <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md">
           <p>Image uploaded successfully!</p>
-          <p>Filename: {result.response}</p>
+          <div>
+            Response:
+            <pre className="whitespace-pre-wrap">{result.response}</pre>
+          </div>
           <div className="mt-4">
             <Image
               src={result.imagePath}

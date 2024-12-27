@@ -3,13 +3,13 @@ CREATE TABLE `file_uploads` (
 	`filename` varchar(255) NOT NULL,
 	`path` varchar(255) NOT NULL,
 	`uploaded_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`user_id` int,
+	`user_id` varchar(191),
 	CONSTRAINT `file_uploads_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `ocr_results` (
 	`id` varchar(191) NOT NULL DEFAULT (uuid()),
-	`file_upload_id` int,
+	`file_upload_id` varchar(191),
 	`text` text NOT NULL,
 	`model` varchar(255) NOT NULL,
 	`processed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -20,6 +20,7 @@ CREATE TABLE `users` (
 	`id` varchar(191) NOT NULL DEFAULT (uuid()),
 	`email` varchar(255) NOT NULL,
 	`password` varchar(255) NOT NULL,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `users_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint

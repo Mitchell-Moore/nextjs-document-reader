@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "650f4974-0064-4c28-a362-95258a136112",
+  "id": "2bdb6c8e-2430-4ee1-ae22-014acf8b2c39",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "file_uploads": {
@@ -39,7 +39,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "int",
+          "type": "varchar(191)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -85,7 +85,7 @@
         },
         "file_upload_id": {
           "name": "file_upload_id",
-          "type": "int",
+          "type": "varchar(191)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -164,6 +164,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
         }
       },
       "indexes": {},

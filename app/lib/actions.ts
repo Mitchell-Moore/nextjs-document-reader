@@ -77,8 +77,8 @@ export async function uploadFileAndHandleOcr(formData: FormData) {
   // Create a unique filename
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const uuid = crypto.randomUUID();
-  const fileName = `${uuid}.${file.type.split('/')[1]}`;
+  const fileUploadId = crypto.randomUUID();
+  const fileName = `${fileUploadId}.${file.type.split('/')[1]}`;
   const path = join(process.cwd(), 'public', 'uploads', fileName);
   const publicPath = `/uploads/${fileName}`;
 
@@ -86,23 +86,29 @@ export async function uploadFileAndHandleOcr(formData: FormData) {
   try {
     await writeFile(path, buffer);
     console.log(`Uploaded file saved at ${path}`);
-    const result = await db.insert(fileUploads).values({
-      id: uuid,
+    const fileUpload = await db.insert(fileUploads).values({
+      id: fileUploadId,
       filename: fileName,
       path: publicPath,
+      userId: '15743b9c-c49d-11ef-ab83-0ba31066cfda',
     });
-    console.log(result);
   } catch (error) {
     console.error('Error saving the file:', error);
     throw new Error('Error saving the file');
   }
 
   // Make a request to the external service
-  // try {
-  //   const response = await googleVisionOcr(path);
-  return { success: true, response: '', imagePath: publicPath };
-  // } catch (error) {
-  //   console.error('Error notifying external service:', error);
-  //   throw new Error('Error notifying external service');
-  // }
+  try {
+    const ocrResult = await googleVisionOcr(path);
+    const result = await db.insert(ocrResults).values({
+      fileUploadId: fileUploadId,
+      text: ocrResult,
+      model: 'google-vision',
+    });
+
+    return { success: true, response: ocrResult, imagePath: publicPath };
+  } catch (error) {
+    console.error('Error notifying external service:', error);
+    throw new Error('Error notifying external service');
+  }
 }

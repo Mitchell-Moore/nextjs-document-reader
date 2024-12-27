@@ -14,6 +14,9 @@ export const users = mysqlTable('users', {
     .default(sql`(uuid())`),
   email: varchar('email', { length: 255 }).notNull(),
   password: varchar('password', { length: 255 }).notNull(),
+  createdAt: timestamp('created_at')
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const fileUploads = mysqlTable('file_uploads', {
@@ -26,7 +29,7 @@ export const fileUploads = mysqlTable('file_uploads', {
   uploadedAt: timestamp('uploaded_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
-  userId: int('user_id').references(() => users.id),
+  userId: varchar('user_id', { length: 191 }).references(() => users.id),
 });
 
 export const ocrResults = mysqlTable('ocr_results', {
@@ -34,7 +37,9 @@ export const ocrResults = mysqlTable('ocr_results', {
     .primaryKey()
     .notNull()
     .default(sql`(uuid())`),
-  fileUploadId: int('file_upload_id').references(() => fileUploads.id),
+  fileUploadId: varchar('file_upload_id', { length: 191 }).references(
+    () => fileUploads.id
+  ),
   text: text('text').notNull(),
   model: varchar('model', { length: 255 }).notNull(),
   processedAt: timestamp('processed_at')
