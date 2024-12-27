@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { uploadFileAndHandleOcr } from './lib/actions';
+import Image from 'next/image';
 
 export default function FileUploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     response: string;
+    imagePath: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,6 +49,7 @@ export default function FileUploadPage() {
             id="file"
             name="file"
             required
+            accept="image/*"
             className="mt-1 block w-full text-sm text-gray-500
                        file:mr-4 file:py-2 file:px-4
                        file:rounded-full file:border-0
@@ -66,8 +69,17 @@ export default function FileUploadPage() {
       {error && <p className="mt-4 text-red-600">{error}</p>}
       {result && (
         <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md">
-          <p>File uploaded successfully!</p>
-          <p>File Contents: {result.response}</p>
+          <p>Image uploaded successfully!</p>
+          <p>Filename: {result.response}</p>
+          <div className="mt-4">
+            <Image
+              src={result.imagePath}
+              alt="Uploaded image"
+              width={300}
+              height={300}
+              className="rounded-md object-cover"
+            />
+          </div>
         </div>
       )}
     </div>

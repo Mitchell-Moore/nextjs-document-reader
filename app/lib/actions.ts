@@ -68,12 +68,17 @@ export async function uploadFileAndHandleOcr(formData: FormData) {
     throw new Error('No file uploaded');
   }
 
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Only image files are allowed');
+  }
+
   // Create a unique filename
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   const uuid = crypto.randomUUID();
   const fileName = `${uuid}.${file.type.split('/')[1]}`;
-  const path = join(process.cwd(), 'app', 'files', 'uploads', fileName);
+  const path = join(process.cwd(), 'public', 'uploads', fileName);
+  const publicPath = `/uploads/${fileName}`;
 
   // Write the file to the server
   try {
@@ -87,7 +92,7 @@ export async function uploadFileAndHandleOcr(formData: FormData) {
   // Make a request to the external service
   try {
     const response = await googleVisionOcr(path);
-    return { success: true, response };
+    return { success: true, response, imagePath: publicPath };
   } catch (error) {
     console.error('Error notifying external service:', error);
     throw new Error('Error notifying external service');
