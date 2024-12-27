@@ -1,30 +1,75 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { handleOcr, uploadFile } from './lib/actions';
+import { useState } from 'react';
+import { uploadFileAndHandleOcr } from './lib/actions';
 
-export default function Home() {
-  const formRef = useRef<HTMLFormElement>(null);
+export default function FileUploadPage() {
+  const [isUploading, setIsUploading] = useState(false);
+  const [result, setResult] = useState<{
+    success: boolean;
+    response: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = () => {
-    formRef.current?.requestSubmit();
-  };
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsUploading(true);
+    setError(null);
+    setResult(null);
+
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const response = await uploadFileAndHandleOcr(formData);
+      setResult(response);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'An unknown error occurred'
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <form ref={formRef} action={uploadFile}>
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">File Upload</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label
+            htmlFor="file"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Choose a file
+          </label>
           <input
             type="file"
-            accept="image/*"
+            id="file"
             name="file"
-            onChange={handleFileChange}
+            required
+            className="mt-1 block w-full text-sm text-gray-500
+                       file:mr-4 file:py-2 file:px-4
+                       file:rounded-full file:border-0
+                       file:text-sm file:font-semibold
+                       file:bg-blue-50 file:text-blue-700
+                       hover:file:bg-blue-100"
           />
-        </form>
-        <form action={handleOcr}>
-          <button type="submit">OCR</button>
-        </form>
-      </main>
+        </div>
+        <button
+          type="submit"
+          disabled={isUploading}
+          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          {isUploading ? 'Uploading...' : 'Upload'}
+        </button>
+      </form>
+      {error && <p className="mt-4 text-red-600">{error}</p>}
+      {result && (
+        <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md">
+          <p>File uploaded successfully!</p>
+          <p>File Contents: {result.response}</p>
+        </div>
+      )}
     </div>
   );
 }

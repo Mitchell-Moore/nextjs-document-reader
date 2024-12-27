@@ -19,6 +19,7 @@
 
 # production
 /build
+/app/files/uploads/*
 
 # misc
 .DS_Store
