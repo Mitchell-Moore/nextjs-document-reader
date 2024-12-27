@@ -7,6 +7,8 @@ import path from 'path';
 import { redirect } from 'next/navigation';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
+import { db } from '../../db';
+import { fileUploads, ocrResults } from '../../db/schema';
 
 const UploadFileFormSchema = z.object({
   file: z.instanceof(File, { message: 'Please select a file.' }),
@@ -84,17 +86,23 @@ export async function uploadFileAndHandleOcr(formData: FormData) {
   try {
     await writeFile(path, buffer);
     console.log(`Uploaded file saved at ${path}`);
+    const result = await db.insert(fileUploads).values({
+      id: uuid,
+      filename: fileName,
+      path: publicPath,
+    });
+    console.log(result);
   } catch (error) {
     console.error('Error saving the file:', error);
     throw new Error('Error saving the file');
   }
 
   // Make a request to the external service
-  try {
-    const response = await googleVisionOcr(path);
-    return { success: true, response, imagePath: publicPath };
-  } catch (error) {
-    console.error('Error notifying external service:', error);
-    throw new Error('Error notifying external service');
-  }
+  // try {
+  //   const response = await googleVisionOcr(path);
+  return { success: true, response: '', imagePath: publicPath };
+  // } catch (error) {
+  //   console.error('Error notifying external service:', error);
+  //   throw new Error('Error notifying external service');
+  // }
 }
