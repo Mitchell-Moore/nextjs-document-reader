@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { uploadFileAndHandleOcr } from './lib/actions';
+import { uploadFile, uploadFileAndHandleOcr } from './lib/actions';
 import Image from 'next/image';
 
 export default function FileUploadPage() {
@@ -22,8 +22,7 @@ export default function FileUploadPage() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const response = await uploadFileAndHandleOcr(formData);
-      setResult(response);
+      await uploadFile(formData);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'An unknown error occurred'
@@ -67,24 +66,6 @@ export default function FileUploadPage() {
         </button>
       </form>
       {error && <p className="mt-4 text-red-600">{error}</p>}
-      {result && (
-        <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md">
-          <p>Image uploaded successfully!</p>
-          <div>
-            Response:
-            <pre className="whitespace-pre-wrap">{result.response}</pre>
-          </div>
-          <div className="mt-4">
-            <Image
-              src={result.imagePath}
-              alt="Uploaded image"
-              width={300}
-              height={300}
-              className="rounded-md object-cover"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

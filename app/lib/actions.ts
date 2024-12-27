@@ -9,59 +9,87 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { db } from '../../db';
 import { fileUploads, ocrResults } from '../../db/schema';
+import { eq } from 'drizzle-orm';
 
-const UploadFileFormSchema = z.object({
-  file: z.instanceof(File, { message: 'Please select a file.' }),
-});
+export async function uploadFile(formData: FormData) {
+  const file = formData.get('file') as File;
+  if (!file) {
+    throw new Error('No file uploaded');
+  }
 
-// export async function uploadFile(formData: FormData) {
-//   const validatedFields = UploadFileFormSchema.safeParse({
-//     file: formData.get('file'),
-//   });
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Only image files are allowed');
+  }
 
-//   console.log(formData);
+  // Create a unique filename
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const fileUploadId = crypto.randomUUID();
+  const fileName = `${fileUploadId}.${file.type.split('/')[1]}`;
+  const path = join(process.cwd(), 'public', 'uploads', fileName);
+  const publicPath = `/uploads/${fileName}`;
 
-//   if (!validatedFields.success) {
-//     throw new Error(
-//       'Validation failed: ' + JSON.stringify(validatedFields.error.issues)
-//     );
-//   }
+  // Write the file to the server
+  try {
+    await writeFile(path, buffer);
+    console.log(`Uploaded file saved at ${path}`);
+    const fileUpload = await db.insert(fileUploads).values({
+      id: fileUploadId,
+      filename: fileName,
+      path: publicPath,
+      userId: '15743b9c-c49d-11ef-ab83-0ba31066cfda',
+    });
+  } catch (error) {
+    console.error('Error saving the file:', error);
+    throw new Error('Error saving the file');
+  }
 
-//   const file = formData.get('file') as File;
-//   const arrayBuffer = await file.arrayBuffer();
-//   const buffer = new Uint8Array(arrayBuffer);
-
-//   console.log(file.type);
-//   const uuid = crypto.randomUUID();
-//   const fileName = `${uuid}.${file.type.split('/')[1]}`;
-
-//   const filePath = path.join(process.cwd(), 'app/files/uploads/', fileName);
-
-//   fs.writeFileSync(filePath, buffer);
-
-//   redirect(`/submissions/${uuid}`);
-// }
-
-export async function handleOcr(formData: FormData) {
-  const fileName = path.join(process.cwd(), 'app/lib/', 'test.png');
-  return await googleVisionOcr(fileName);
+  redirect(`/submission/${fileUploadId}`);
 }
 
-async function googleVisionOcr(fileName: string) {
+export async function handleOcr(fileUploadId: string) {
+  if (!fileUploadId) {
+    throw new Error('No fileUploadId provided');
+  }
+
+  const fileUpload = await db.query.fileUploads.findFirst({
+    where: eq(fileUploads.id, fileUploadId),
+  });
+
+  if (!fileUpload) {
+    throw new Error('FileUpload not found');
+  }
+
+  const filePath = path.join(process.cwd(), 'public', fileUpload.path);
+  if (!fs.existsSync(filePath)) {
+    throw new Error('File not found');
+  }
+
+  const response = await googleVisionOcr(filePath);
+  const ocrResult = await db.insert(ocrResults).values({
+    fileUploadId: fileUploadId,
+    text: response,
+    model: 'google-vision',
+  });
+
+  return ocrResult;
+}
+
+async function googleVisionOcr(filePath: string) {
   // Creates a client
   const client = new vision.ImageAnnotatorClient({
     apiKey: process.env.GOOGLE_API_KEY,
   });
 
   // Performs text detection on the local file
-  const [result] = await client.textDetection(fileName);
+  const [result] = await client.textDetection(filePath);
   const detections = result.textAnnotations;
   console.log('Text:');
   detections?.forEach((text) => console.log(text));
   if (detections && detections.length > 0) {
     return detections[0].description ?? '';
   }
-  return '';
+  throw new Error('Ocr failed');
 }
 
 export async function uploadFileAndHandleOcr(formData: FormData) {
