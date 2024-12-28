@@ -9,13 +9,13 @@ export default async function OrcResult(props: {
 }) {
   const id = props.fileUpload.id;
 
-  const orcResult = await db.query.ocrResults.findFirst({
+  let orcResult = await db.query.ocrResults.findFirst({
     where: eq(ocrResults.fileUploadId, id),
     orderBy: desc(ocrResults.processedAt),
   });
 
   if (!orcResult) {
-    const orcResult = await handleOcr(id);
+    orcResult = await handleOcr(id);
   }
 
   return orcResult ? (

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { uploadFile } from './lib/actions';
+import { createUser } from './lib/actions';
 
 export default function FileUploadPage() {
   const [isUploading, setIsUploading] = useState(false);
@@ -11,6 +12,20 @@ export default function FileUploadPage() {
     imagePath: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const allCookies = document.cookie;
+    console.log('allCookies', allCookies);
+    // const hasSessionCookie = allCookies.includes('yourSessionCookieName=');
+
+    // if (hasSessionCookie) {
+    //   console.log('Session cookie is present');
+    //   // Perform any logic if the user has a session
+    // }
+    // if (!session) {
+    //   createUser();
+    // }
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -9,6 +9,7 @@ async function main() {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     multipleStatements: true,
+    port: parseInt(process.env.DB_PORT!),
   });
 
   const db = drizzle(connection);

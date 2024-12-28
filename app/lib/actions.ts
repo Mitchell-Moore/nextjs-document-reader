@@ -8,8 +8,10 @@ import { redirect } from 'next/navigation';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { db } from '../../db';
-import { fileUploads, ocrResults } from '../../db/schema';
+import { fileUploads, ocrResults, users } from '../../db/schema';
 import { eq } from 'drizzle-orm';
+import { createSession } from './session';
+import { revalidatePath } from 'next/cache';
 
 export async function uploadFile(formData: FormData) {
   const file = formData.get('file') as File;
@@ -66,10 +68,22 @@ export async function handleOcr(fileUploadId: string) {
   }
 
   const response = await googleVisionOcr(filePath);
-  const ocrResult = await db.insert(ocrResults).values({
-    fileUploadId: fileUploadId,
-    text: response,
-    model: 'google-vision',
+
+  const ocrResultInsert = (await db
+    .insert(ocrResults)
+    .values({
+      fileUploadId: fileUploadId,
+      text: response,
+      model: 'google-vision',
+    })
+    .$returningId()) as { id: string }[];
+
+  if (!ocrResultInsert || !ocrResultInsert[0]) {
+    throw new Error('Failed to create ocrResult');
+  }
+
+  const ocrResult = await db.query.ocrResults.findFirst({
+    where: eq(ocrResults.id, ocrResultInsert[0].id),
   });
 
   return ocrResult;
@@ -84,10 +98,25 @@ async function googleVisionOcr(filePath: string) {
   // Performs text detection on the local file
   const [result] = await client.textDetection(filePath);
   const detections = result.textAnnotations;
-  console.log('Text:');
   detections?.forEach((text) => console.log(text));
   if (detections && detections.length > 0) {
     return detections[0].description ?? '';
   }
   throw new Error('Ocr failed');
+}
+
+export async function createUser() {
+  const userId = crypto.randomUUID();
+  const userInsertResult = await db.insert(users).values({ id: userId });
+
+  console.log('userInsertResult', userInsertResult);
+
+  if (!userInsertResult || !userInsertResult[0]) {
+    throw new Error('Failed to create user');
+  }
+
+  await createSession(userId);
+  revalidatePath('/');
+
+  // return userInsertResult[0].id;
 }
