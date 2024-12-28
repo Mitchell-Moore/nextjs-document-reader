@@ -21,27 +21,27 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const publicPath = `/uploads/${fileUpload.filename}`;
 
   return (
-    <main className="bg-gray-50 p-4 flex flex-col md:flex-row gap-4 h-screen justify-around">
-      <div className="">
-        <div className="p-8 bg-white rounded-lg">
-          <div className="h-96">
-            <h3 className="text-lg font-medium">Uploaded File</h3>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="mx-auto max-w-7xl grid md:grid-cols-2 gap-8">
+        <div className="p-6 bg-white shadow-lg border border-gray-200 rounded-lg">
+          <div className="">
+            <h2 className="text-lg font-semibold mb-4">Uploaded File</h2>
             <Image
               src={publicPath}
               alt={fileUpload.filename}
               width={550}
               height={550}
-              className="mt-2 rounded-md object-cover"
+              className=" w-full h-full object-cover"
               priority
             />
           </div>
         </div>
+        <div className="p-6 bg-white  shadow-lg border border-gray-200 rounded-lg">
+          <Suspense fallback={<OrcResultLoading />}>
+            <OrcResult fileUpload={fileUpload} />
+          </Suspense>
+        </div>
       </div>
-      <div className="">
-        <Suspense fallback={<OrcResultLoading />}>
-          <OrcResult fileUpload={fileUpload} />
-        </Suspense>
-      </div>
-    </main>
+    </div>
   );
 }

@@ -19,9 +19,9 @@ export default async function OrcResult(props: {
   }
 
   return orcResult ? (
-    <div className="p-8 bg-white rounded-lg">
-      <h3 className="text-lg font-medium">OCR Result:</h3>
-      <pre className="whitespace-pre-wrap text-sm font-sans text-gray-800 h-96 overflow-y-auto">
+    <div>
+      <h2 className="text-lg font-semibold mb-4">Result</h2>
+      <pre className="whitespace-pre-wrap text-sm font-sans text-gray-800 max-h-96 py-2 overflow-y-auto">
         {orcResult.text}
       </pre>
     </div>
