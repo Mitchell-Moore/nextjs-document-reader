@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { uploadFile, uploadFileAndHandleOcr } from './lib/actions';
-import Image from 'next/image';
+import { uploadFile } from './lib/actions';
 
 export default function FileUploadPage() {
   const [isUploading, setIsUploading] = useState(false);

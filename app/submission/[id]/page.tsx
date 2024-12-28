@@ -4,7 +4,8 @@ import { db } from '@/db';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
 import { Suspense } from 'react';
-import OrcResult from '../../ui/OrcResult';
+import OrcResult from '@/app/ui/OrcResult';
+import OrcResultLoading from '@/app/ui/OrcResultLoading';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -20,25 +21,24 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const publicPath = `/uploads/${fileUpload.filename}`;
 
   return (
-    <main>
-      <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md">
-        <p>Image uploaded successfully!</p>
-        <div>
-          Response:
-          {/* <pre className="whitespace-pre-wrap">{result.response}</pre> */}
-        </div>
-        <div className="mt-4">
-          <Image
-            src={publicPath}
-            alt="Uploaded image"
-            width={300}
-            height={300}
-            className="rounded-md object-cover"
-          />
+    <main className="bg-gray-50 p-4 flex flex-col md:flex-row gap-4 h-screen justify-around">
+      <div className="">
+        <div className="p-8 bg-white rounded-lg">
+          <div className="h-96">
+            <h3 className="text-lg font-medium">Uploaded File</h3>
+            <Image
+              src={publicPath}
+              alt={fileUpload.filename}
+              width={550}
+              height={550}
+              className="mt-2 rounded-md object-cover"
+              priority
+            />
+          </div>
         </div>
       </div>
-      <div>
-        <Suspense fallback={<div>Loading...</div>}>
+      <div className="">
+        <Suspense fallback={<OrcResultLoading />}>
           <OrcResult fileUpload={fileUpload} />
         </Suspense>
       </div>
