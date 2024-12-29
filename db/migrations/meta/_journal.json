@@ -15,6 +15,13 @@
       "when": 1735407982278,
       "tag": "0001_flaky_gwen_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1735483144592,
+      "tag": "0002_early_zzzax",
+      "breakpoints": true
     }
   ]
 }

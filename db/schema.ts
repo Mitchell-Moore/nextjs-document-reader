@@ -7,16 +7,6 @@ import {
   text,
 } from 'drizzle-orm/mysql-core';
 
-export const users = mysqlTable('users', {
-  id: varchar('id', { length: 191 })
-    .primaryKey()
-    .notNull()
-    .default(sql`(uuid())`),
-  createdAt: timestamp('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-});
-
 export const fileUploads = mysqlTable('file_uploads', {
   id: varchar('id', { length: 191 })
     .primaryKey()
@@ -27,7 +17,6 @@ export const fileUploads = mysqlTable('file_uploads', {
   uploadedAt: timestamp('uploaded_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
-  userId: varchar('user_id', { length: 191 }).references(() => users.id),
 });
 
 export const ocrResults = mysqlTable('ocr_results', {

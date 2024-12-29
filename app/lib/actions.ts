@@ -8,10 +8,8 @@ import { redirect } from 'next/navigation';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { db } from '../../db';
-import { fileUploads, ocrResults, users } from '../../db/schema';
+import { fileUploads, ocrResults } from '../../db/schema';
 import { eq } from 'drizzle-orm';
-import { createSession } from './session';
-import { revalidatePath } from 'next/cache';
 
 export async function uploadFile(formData: FormData) {
   const file = formData.get('file') as File;
@@ -39,7 +37,6 @@ export async function uploadFile(formData: FormData) {
       id: fileUploadId,
       filename: fileName,
       path: publicPath,
-      userId: '15743b9c-c49d-11ef-ab83-0ba31066cfda',
     });
   } catch (error) {
     console.error('Error saving the file:', error);
@@ -103,20 +100,4 @@ async function googleVisionOcr(filePath: string) {
     return detections[0].description ?? '';
   }
   throw new Error('Ocr failed');
-}
-
-export async function createUser() {
-  const userId = crypto.randomUUID();
-  const userInsertResult = await db.insert(users).values({ id: userId });
-
-  console.log('userInsertResult', userInsertResult);
-
-  if (!userInsertResult || !userInsertResult[0]) {
-    throw new Error('Failed to create user');
-  }
-
-  await createSession(userId);
-  revalidatePath('/');
-
-  // return userInsertResult[0].id;
 }
