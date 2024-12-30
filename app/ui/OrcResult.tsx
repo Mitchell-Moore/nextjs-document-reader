@@ -6,6 +6,7 @@ import { fileUploads } from '@/db/schema';
 
 export default async function OrcResult(props: {
   fileUpload: typeof fileUploads.$inferSelect;
+  model: string;
 }) {
   const id = props.fileUpload.id;
 
@@ -14,9 +15,7 @@ export default async function OrcResult(props: {
     orderBy: desc(ocrResults.processedAt),
   });
 
-  // const model =
-  //   new URLSearchParams(window.location.search).get('model') || 'google-vision';
-  const model = 'google-vision';
+  const model = props.model;
 
   if (!orcResult) {
     orcResult = await handleOcr(id, model);
