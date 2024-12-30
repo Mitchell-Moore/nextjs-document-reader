@@ -96,7 +96,6 @@ export default function FileUploadPage() {
             models={models}
             selectedModel={selectedModel}
             onSelect={(model) => {
-              console.log('selectedModel', model);
               setSelectedModel(model);
             }}
           />

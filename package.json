@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-textract": "^3.716.0",
+    "@azure-rest/ai-vision-image-analysis": "^1.0.0-beta.3",
     "@google-cloud/vision": "^4.3.2",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.3",

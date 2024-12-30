@@ -2,6 +2,14 @@
 
 import { z } from 'zod';
 import vision from '@google-cloud/vision';
+import {
+  TextractClient,
+  DetectDocumentTextCommand,
+} from '@aws-sdk/client-textract';
+import createClient, {
+  ImageAnalysisClient,
+} from '@azure-rest/ai-vision-image-analysis';
+import { AzureKeyCredential } from '@azure/core-auth';
 import fs from 'fs';
 import path from 'path';
 import { redirect } from 'next/navigation';
@@ -72,6 +80,10 @@ export async function handleOcr(fileUploadId: string, model: string) {
   let response;
   if (model === 'google-vision') {
     response = await googleVisionOcr(filePath);
+  } else if (model === 'aws-textract') {
+    response = await awsTextractOcr(filePath);
+  } else if (model === 'azure-vision') {
+    response = await azureVisionOcr(filePath);
   } else {
     throw new Error('Model not found');
   }
@@ -108,5 +120,68 @@ async function googleVisionOcr(filePath: string) {
   if (detections && detections.length > 0) {
     return detections[0].description ?? '';
   }
-  throw new Error('Ocr failed');
+  throw new Error('Google Vision Ocr failed');
+}
+
+async function awsTextractOcr(filePath: string) {
+  const client = new TextractClient({
+    region: process.env.AWS_REGION!,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  });
+
+  const fileData = fs.readFileSync(filePath);
+
+  // Send command to Textract
+  const command = new DetectDocumentTextCommand({
+    Document: {
+      Bytes: fileData,
+    },
+  });
+
+  const response = await client.send(command);
+  console.log('Textract response:', response.Blocks);
+  const text = response.Blocks?.map((block) => block.Text).join(' ');
+  if (!text) {
+    throw new Error('AWS Textract Ocr failed');
+  }
+  return text;
+}
+
+async function azureVisionOcr(filePath: string) {
+  const client = createClient(
+    process.env.AZURE_VISION_ENDPOINT!,
+    new AzureKeyCredential(process.env.AZURE_VISION_KEY!)
+  );
+
+  const fileData = fs.readFileSync(filePath);
+
+  const result = await client.path('/imageanalysis:analyze').post({
+    body: fileData,
+    queryParameters: {
+      features: ['Caption', 'Read'],
+    },
+    contentType: 'application/octet-stream',
+  });
+
+  const iaResult = result.body;
+  console.log('iaResult', iaResult);
+
+  if ('error' in iaResult) {
+    throw new Error('Azure Vision Ocr failed');
+  }
+
+  if ('readResult' in iaResult) {
+    const text = iaResult.readResult?.blocks
+      .map((block) => block.lines.map((line) => line.text).join(' '))
+      .join(' ');
+    if (!text) {
+      throw new Error('Azure Vision Ocr failed');
+    }
+    return text;
+  }
+
+  throw new Error('Azure Vision Ocr failed');
 }

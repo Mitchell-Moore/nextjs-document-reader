@@ -7,17 +7,19 @@ import { Suspense } from 'react';
 import OrcResult from '@/app/ui/OrcResult';
 import OrcResultLoading from '@/app/ui/OrcResultLoading';
 
-export default async function Page(props: {
-  params: Promise<{
-    id: string;
-    searchParams?: {
-      model?: string;
-    };
-  }>;
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ model?: string }>;
 }) {
-  const params = await props.params;
-  const id = params.id;
-  console.log('here', id);
+  const id = (await params).id;
+  let model = (await searchParams).model;
+  if (!model) {
+    model = 'google-vision';
+  }
+  model = model as string;
   const fileUpload = await db.query.fileUploads.findFirst({
     where: eq(fileUploads.id, id),
   });
@@ -45,10 +47,7 @@ export default async function Page(props: {
         </div>
         <div className="p-6 bg-white  shadow-lg border border-gray-200 rounded-lg">
           <Suspense fallback={<OrcResultLoading />}>
-            <OrcResult
-              fileUpload={fileUpload}
-              model={params.searchParams?.model || 'google-vision'}
-            />
+            <OrcResult fileUpload={fileUpload} model={model} />
           </Suspense>
         </div>
       </div>
