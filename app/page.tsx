@@ -6,6 +6,7 @@ import ModelSelector from './ui/ModelSelector';
 
 export default function FileUploadPage() {
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const models = [
     { model: 'google-vision', label: 'Google Vision' },
     { model: 'azure-vision', label: 'Azure Vision' },
@@ -16,6 +17,46 @@ export default function FileUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const uploadFileOnSubmit = uploadFile.bind(null);
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB, for example
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    // Retrieve the dropped files
+    const files = Array.from(e.dataTransfer.files);
+
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.size > MAX_FILE_SIZE) {
+        setError('File size exceeds the maximum limit of 5MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload a valid image file');
+        return;
+      }
+
+      setFile(file);
+    }
+  };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,9 +134,18 @@ export default function FileUploadPage() {
             <div className="flex flex-col items-center justify-center gap-4 w-full">
               <div
                 className="border-2 border-dashed border-gray-200 rounded-lg p-8 w-full text-center hover:border-gray-400 transition-colors cursor-pointer"
+                style={{
+                  borderColor: isDragging
+                    ? 'border-color: rgb(156 163 175 / var(--tw-border-opacity, 1))'
+                    : '',
+                }}
                 onClick={() => {
                   document.getElementById('file')?.click();
                 }}
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
               >
                 <div className="flex flex-col items-center gap-2">
                   <svg
@@ -118,13 +168,9 @@ export default function FileUploadPage() {
                     </div>
                   ) : (
                     <div>
-                      <button
-                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 underline-offset-4 hover:underline h-10 px-4 py-2 text-gray-800"
-                        type="button"
-                      >
-                        Choose a file
-                      </button>
-                      <span className="text-gray-600"> or drag and drop</span>
+                      <span className="text-gray-600">
+                        Choose a file or drag and drop
+                      </span>
                     </div>
                   )}
                 </div>
