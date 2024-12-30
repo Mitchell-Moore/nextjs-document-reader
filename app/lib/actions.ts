@@ -13,8 +13,15 @@ import { eq } from 'drizzle-orm';
 
 export async function uploadFile(formData: FormData) {
   const file = formData.get('file') as File;
+  const model = formData.get('model') as string;
+  console.log('model', model);
+
   if (!file) {
     throw new Error('No file uploaded');
+  }
+
+  if (!model) {
+    throw new Error('No model selected');
   }
 
   if (!file.type.startsWith('image/')) {
@@ -43,10 +50,10 @@ export async function uploadFile(formData: FormData) {
     throw new Error('Error saving the file');
   }
 
-  redirect(`/submission/${fileUploadId}`);
+  redirect(`/submission/${fileUploadId}?model=${model}`);
 }
 
-export async function handleOcr(fileUploadId: string) {
+export async function handleOcr(fileUploadId: string, model: string) {
   if (!fileUploadId) {
     throw new Error('No fileUploadId provided');
   }
@@ -64,14 +71,19 @@ export async function handleOcr(fileUploadId: string) {
     throw new Error('File not found');
   }
 
-  const response = await googleVisionOcr(filePath);
+  let response;
+  if (model === 'google-vision') {
+    response = await googleVisionOcr(filePath);
+  } else {
+    throw new Error('Model not found');
+  }
 
   const ocrResultInsert = (await db
     .insert(ocrResults)
     .values({
       fileUploadId: fileUploadId,
       text: response,
-      model: 'google-vision',
+      model: model,
     })
     .$returningId()) as { id: string }[];
 
