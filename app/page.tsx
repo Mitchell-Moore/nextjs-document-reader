@@ -15,6 +15,7 @@ export default function FileUploadPage() {
   const [selectedModel, setSelectedModel] = useState(models[0]);
   const [file, setFile] = useState<File | null>(null);
   const uploadFileOnSubmit = uploadFile.bind(null);
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB, for example
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,6 +23,10 @@ export default function FileUploadPage() {
 
     if (!file) {
       setError('Please select a file');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File size exceeds the maximum limit of 5MB');
       return;
     }
 
