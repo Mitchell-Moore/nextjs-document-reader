@@ -6,11 +6,6 @@ import ModelSelector from './ui/ModelSelector';
 
 export default function FileUploadPage() {
   const [isUploading, setIsUploading] = useState(false);
-  const [result, setResult] = useState<{
-    success: boolean;
-    response: string;
-    imagePath: string;
-  } | null>(null);
   const models = [
     { model: 'google-vision', label: 'Google Vision' },
     { model: 'azure-vision', label: 'Azure Vision' },
@@ -18,16 +13,23 @@ export default function FileUploadPage() {
   ];
   const [error, setError] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(models[0]);
+  const [file, setFile] = useState<File | null>(null);
   const uploadFileOnSubmit = uploadFile.bind(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsUploading(true);
     setError(null);
-    setResult(null);
 
-    const formData = new FormData(event.currentTarget);
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
     formData.append('model', selectedModel.model);
+
+    setIsUploading(true);
 
     try {
       await uploadFileOnSubmit(formData);
@@ -77,7 +79,12 @@ export default function FileUploadPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 w-full">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 w-full"
+            name="file-upload-form"
+            id="file-upload-form"
+          >
             <div className="flex flex-col items-center justify-center gap-4 w-full">
               <div
                 className="border-2 border-dashed border-gray-200 rounded-lg p-8 w-full text-center hover:border-gray-400 transition-colors cursor-pointer"
@@ -100,15 +107,21 @@ export default function FileUploadPage() {
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" x2="12" y1="3" y2="15"></line>
                   </svg>
-                  <div>
-                    <button
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 underline-offset-4 hover:underline h-10 px-4 py-2 text-gray-800"
-                      type="button"
-                    >
-                      Choose a file
-                    </button>
-                    <span className="text-gray-600"> or drag and drop</span>
-                  </div>
+                  {file ? (
+                    <div className="text-gray-600 text-sm">
+                      {file.name} - {file.size} bytes
+                    </div>
+                  ) : (
+                    <div>
+                      <button
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 underline-offset-4 hover:underline h-10 px-4 py-2 text-gray-800"
+                        type="button"
+                      >
+                        Choose a file
+                      </button>
+                      <span className="text-gray-600"> or drag and drop</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <input
@@ -117,6 +130,9 @@ export default function FileUploadPage() {
                 name="file"
                 accept="image/*"
                 className="hidden"
+                onChange={(event) => {
+                  setFile(event.target.files?.[0] || null);
+                }}
               />
 
               <button

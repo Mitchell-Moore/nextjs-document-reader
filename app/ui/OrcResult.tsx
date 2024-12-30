@@ -14,8 +14,12 @@ export default async function OrcResult(props: {
     orderBy: desc(ocrResults.processedAt),
   });
 
+  // const model =
+  //   new URLSearchParams(window.location.search).get('model') || 'google-vision';
+  const model = 'google-vision';
+
   if (!orcResult) {
-    orcResult = await handleOcr(id);
+    orcResult = await handleOcr(id, model);
   }
 
   return orcResult ? (

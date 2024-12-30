@@ -14,7 +14,6 @@ import { eq } from 'drizzle-orm';
 export async function uploadFile(formData: FormData) {
   const file = formData.get('file') as File;
   const model = formData.get('model') as string;
-  console.log('model', model);
 
   if (!file) {
     throw new Error('No file uploaded');
@@ -39,7 +38,6 @@ export async function uploadFile(formData: FormData) {
   // Write the file to the server
   try {
     await writeFile(path, buffer);
-    console.log(`Uploaded file saved at ${path}`);
     const fileUpload = await db.insert(fileUploads).values({
       id: fileUploadId,
       filename: fileName,
@@ -78,21 +76,21 @@ export async function handleOcr(fileUploadId: string, model: string) {
     throw new Error('Model not found');
   }
 
-  const ocrResultInsert = (await db
-    .insert(ocrResults)
-    .values({
-      fileUploadId: fileUploadId,
-      text: response,
-      model: model,
-    })
-    .$returningId()) as { id: string }[];
+  const ocrResultId = crypto.randomUUID();
 
-  if (!ocrResultInsert || !ocrResultInsert[0]) {
+  const ocrResultInsert = await db.insert(ocrResults).values({
+    id: ocrResultId,
+    fileUploadId: fileUploadId,
+    text: response,
+    model: model,
+  });
+
+  if (!ocrResultInsert) {
     throw new Error('Failed to create ocrResult');
   }
 
   const ocrResult = await db.query.ocrResults.findFirst({
-    where: eq(ocrResults.id, ocrResultInsert[0].id),
+    where: eq(ocrResults.id, ocrResultId),
   });
 
   return ocrResult;
@@ -107,7 +105,6 @@ async function googleVisionOcr(filePath: string) {
   // Performs text detection on the local file
   const [result] = await client.textDetection(filePath);
   const detections = result.textAnnotations;
-  detections?.forEach((text) => console.log(text));
   if (detections && detections.length > 0) {
     return detections[0].description ?? '';
   }

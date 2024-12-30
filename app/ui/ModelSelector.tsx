@@ -41,6 +41,8 @@ export default function ModelSelector(props: {
         onFocus={() => {
           setIsOpen(true);
         }}
+        name="model-selector"
+        id="model-selector"
       />
       {isOpen && (
         <div className="absolute top-full mt-1 left-0 right-0 w-full bg-white border border-gray-300 rounded-md shadow-md z-10">
