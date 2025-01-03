@@ -4,7 +4,7 @@ export async function saveFile(file: File) {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   const fileUploadId = crypto.randomUUID();
-  const fileName = `${fileUploadId}.${file.type.split('/')[1]}`;
+  const fileName = `document-reader/${fileUploadId}.${file.type.split('/')[1]}`;
 
   const { url } = await put(fileName, buffer, {
     access: 'public',
