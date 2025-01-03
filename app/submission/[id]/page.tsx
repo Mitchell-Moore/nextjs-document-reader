@@ -29,9 +29,9 @@ export default async function Page({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl grid md:grid-cols-2 gap-8">
-        <div className="p-6 bg-white shadow-lg border border-gray-200 rounded-lg">
+    <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl min-h-screen">
+      <div className="mx-auto grid md:grid-cols-2 gap-6">
+        <div className="p-6 bg-white shadow-lg border border-gray-200 rounded-lg ">
           <div className="">
             <h2 className="text-lg font-semibold mb-4">Uploaded File</h2>
             <Image
