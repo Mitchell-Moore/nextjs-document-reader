@@ -27,7 +27,6 @@ export default async function Page({
   if (!fileUpload) {
     notFound();
   }
-  const publicPath = `/uploads/${fileUpload.filename}`;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -36,7 +35,7 @@ export default async function Page({
           <div className="">
             <h2 className="text-lg font-semibold mb-4">Uploaded File</h2>
             <Image
-              src={publicPath}
+              src={fileUpload.path}
               alt={fileUpload.filename}
               width={550}
               height={550}

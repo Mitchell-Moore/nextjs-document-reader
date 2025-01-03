@@ -7,17 +7,16 @@ import {
   DetectDocumentTextCommand,
 } from '@aws-sdk/client-textract';
 import createClient, {
-  ImageAnalysisClient,
+  AnalyzeFromUrlParameters,
 } from '@azure-rest/ai-vision-image-analysis';
 import { AzureKeyCredential } from '@azure/core-auth';
 import fs from 'fs';
 import path from 'path';
 import { redirect } from 'next/navigation';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 import { db } from '../../db';
 import { fileUploads, ocrResults } from '../../db/schema';
 import { eq } from 'drizzle-orm';
+import { saveFile } from './utils';
 
 export async function uploadFile(formData: FormData) {
   const file = formData.get('file') as File;
@@ -35,25 +34,23 @@ export async function uploadFile(formData: FormData) {
     throw new Error('Only image files are allowed');
   }
 
-  // Create a unique filename
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  const fileUploadId = crypto.randomUUID();
-  const fileName = `${fileUploadId}.${file.type.split('/')[1]}`;
-  const path = join(process.cwd(), 'public', 'uploads', fileName);
-  const publicPath = `/uploads/${fileName}`;
-
   // Write the file to the server
+  let fileUploadId;
   try {
-    await writeFile(path, buffer);
+    const { id, filename, path } = await saveFile(file);
+    fileUploadId = id;
     const fileUpload = await db.insert(fileUploads).values({
-      id: fileUploadId,
-      filename: fileName,
-      path: publicPath,
+      id: id,
+      filename: filename,
+      path: path,
     });
   } catch (error) {
     console.error('Error saving the file:', error);
     throw new Error('Error saving the file');
+  }
+
+  if (!fileUploadId) {
+    throw new Error('Failed to save the file');
   }
 
   redirect(`/submission/${fileUploadId}?model=${model}`);
@@ -72,18 +69,13 @@ export async function handleOcr(fileUploadId: string, model: string) {
     throw new Error('FileUpload not found');
   }
 
-  const filePath = path.join(process.cwd(), 'public', fileUpload.path);
-  if (!fs.existsSync(filePath)) {
-    throw new Error('File not found');
-  }
-
   let response;
   if (model === 'google-vision') {
-    response = await googleVisionOcr(filePath);
+    response = await googleVisionOcr(fileUpload.path);
   } else if (model === 'aws-textract') {
-    response = await awsTextractOcr(filePath);
+    response = await awsTextractOcr(fileUpload.path);
   } else if (model === 'azure-vision') {
-    response = await azureVisionOcr(filePath);
+    response = await azureVisionOcr(fileUpload.path);
   } else {
     throw new Error('Model not found');
   }
@@ -132,12 +124,19 @@ async function awsTextractOcr(filePath: string) {
     },
   });
 
-  const fileData = fs.readFileSync(filePath);
+  const fileResponse = await fetch(filePath);
+  if (!fileResponse.ok) {
+    throw new Error(`Failed to fetch file`);
+  }
 
-  // Send command to Textract
+  // 3. Convert the response into an ArrayBuffer, then into a Buffer
+  const arrayBuffer = await fileResponse.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // 4. Create the Textract command with the file bytes
   const command = new DetectDocumentTextCommand({
     Document: {
-      Bytes: fileData,
+      Bytes: buffer, // <== The file data
     },
   });
 
@@ -156,15 +155,15 @@ async function azureVisionOcr(filePath: string) {
     new AzureKeyCredential(process.env.AZURE_VISION_KEY!)
   );
 
-  const fileData = fs.readFileSync(filePath);
-
-  const result = await client.path('/imageanalysis:analyze').post({
-    body: fileData,
+  const options = {
+    body: {
+      url: filePath,
+    },
     queryParameters: {
       features: ['Caption', 'Read'],
     },
-    contentType: 'application/octet-stream',
-  });
+  } as AnalyzeFromUrlParameters;
+  const result = await client.path('/imageanalysis:analyze').post(options);
 
   const iaResult = result.body;
   console.log('iaResult', iaResult);
