@@ -108,9 +108,11 @@ export default function FileUploadPage() {
             Extract Text from Images
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Upload any image containing text and our advanced OCR technology
-            will extract and digitize the content for you. Perfect for
-            documents, receipts, business cards, and more.
+            Thanks for checking out my project! This is a simple Optical
+            Character Recognition (OCR) tool that allows you to extract text
+            from images. Just upload your image, pick a vision model (Google
+            Vision, Azure Vision, or AWS Textract), and we'll extract the text
+            for you.
           </p>
         </div>
 
