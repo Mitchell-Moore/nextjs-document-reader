@@ -18,7 +18,18 @@ export default async function OrcResult(props: {
   const model = props.model;
 
   if (!orcResult) {
-    orcResult = await handleOcr(id, model);
+   try {
+     orcResult = await handleOcr(id, model);
+   } catch (error) {
+     return (
+       <div className="text-red-600">
+         <h2 className="text-lg font-semibold mb-4">Error</h2>
+         <p className="text-sm">
+           {error instanceof Error ? error.message : 'Failed to process image'}
+         </p>
+       </div>
+     );
+   }
   }
 
   return orcResult ? (

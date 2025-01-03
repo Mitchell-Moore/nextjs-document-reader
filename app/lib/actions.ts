@@ -120,7 +120,7 @@ async function googleVisionOcr(filePath: string) {
   if (detections && detections.length > 0) {
     return detections[0].description ?? '';
   }
-  throw new Error('Google Vision Ocr failed');
+  return 'Google Vision could not detect text';
 }
 
 async function awsTextractOcr(filePath: string) {
@@ -145,7 +145,7 @@ async function awsTextractOcr(filePath: string) {
   console.log('Textract response:', response.Blocks);
   const text = response.Blocks?.map((block) => block.Text).join(' ');
   if (!text) {
-    throw new Error('AWS Textract Ocr failed');
+    return 'AWS Textract could not detect text';
   }
   return text;
 }
@@ -168,6 +168,7 @@ async function azureVisionOcr(filePath: string) {
 
   const iaResult = result.body;
   console.log('iaResult', iaResult);
+  console.log('iaResult', iaResult);
 
   if ('error' in iaResult) {
     throw new Error('Azure Vision Ocr failed');
@@ -178,7 +179,13 @@ async function azureVisionOcr(filePath: string) {
       .map((block) => block.lines.map((line) => line.text).join(' '))
       .join(' ');
     if (!text) {
-      throw new Error('Azure Vision Ocr failed');
+      if ('captionResult' in iaResult) {
+        return (
+          'Azure Vision could not detect text but it did caption it: ' +
+          iaResult.captionResult?.text
+        );
+      }
+      return 'Azure Vision could not detect text';
     }
     return text;
   }
