@@ -16,7 +16,7 @@ export default function FileUploadPage() {
   const [selectedModel, setSelectedModel] = useState(models[0]);
   const [file, setFile] = useState<File | null>(null);
   const uploadFileOnSubmit = uploadFile.bind(null);
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB, for example
+  const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4 MB, for example
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault(); // Necessary to allow dropping
@@ -46,7 +46,7 @@ export default function FileUploadPage() {
     if (files.length > 0) {
       const file = files[0];
       if (file.size > MAX_FILE_SIZE) {
-        setError('File size exceeds the maximum limit of 5MB');
+        setError('File size exceeds the maximum limit of 4MB');
         return;
       }
       if (!file.type.startsWith('image/')) {
@@ -67,7 +67,7 @@ export default function FileUploadPage() {
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size exceeds the maximum limit of 5MB');
+      setError('File size exceeds the maximum limit of 4MB');
       return;
     }
 
@@ -80,6 +80,10 @@ export default function FileUploadPage() {
     try {
       await uploadFileOnSubmit(formData);
     } catch (err) {
+      console.log(err);
+      if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
+        return;
+      }
       setError(
         err instanceof Error ? err.message : 'An unknown error occurred'
       );
